@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+
+  nginx:
+    build: requirements/nginx/
+    container_name: nginx
+    image: nginx:inception
+    ports:
+      - 443:443
+    volumes:
+      - wordpress_data:/var/www/html/wordpress
+    depends_on:
+      - wordpress
+    networks:
+      - docker_network
+    restart: always
+  
+  mariadb:
+    build: requirements/mariadb/
+    container_name: mariadb
+    image: mariadb:inception
+    networks:
+      - docker_network
+    ports:
+      - 3306:3306
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    restart: always
+    environment:
+      MARIADB_DB_NAME:          ${MARIADB_DB_NAME}
+      MARIADB_ROOT_PASSWORD:    ${MARIADB_ROOT_PASSWORD}
+      MARIADB_USER_NAME:        ${MARIADB_USER_NAME}
+      MARIADB_USER_PASSWORD:    ${MARIADB_USER_PASSWORD}
+ 
+  wordpress:
+    container_name: wordpress
+    build: requirements/wordpress/
+    image: wordpress:inception
+    networks:
+      - docker_network
+    ports:
+      - 9000:9000
+    volumes:
+      - wordpress_data:/var/www/html/wordpress
+    depends_on:
+      - mariadb
+    restart: always
+    environment:
+      DOMAIN_NAME:              ${DOMAIN_NAME}
+      MARIADB_MYSQL_HOST:       ${MARIADB_MYSQL_HOST}
+      MARIADB_DB_NAME:          ${MARIADB_DB_NAME}
+      MARIADB_USER_NAME:        ${MARIADB_USER_NAME}
+      MARIADB_USER_PASSWORD:    ${MARIADB_USER_PASSWORD}
+      WORDPRESS_WEBSITE_TITLE:  ${WORDPRESS_WEBSITE_TITLE}
+      WORDPRESS_ADMIN_NAME:     ${WORDPRESS_ADMIN_NAME}
+      WORDPRESS_ADMIN_PASSWORD: ${WORDPRESS_ADMIN_PASSWORD}
+      WORDPRESS_ADMIN_EMAIL:    ${WORDPRESS_ADMIN_EMAIL}
+      WORDPRESS_USER_NAME:      ${WORDPRESS_USER_NAME}
+      WORDPRESS_USER_PASSWORD:  ${WORDPRESS_USER_PASSWORD}
+      WORDPRESS_USER_EMAIL:     ${WORDPRESS_USER_EMAIL}
+
+
+networks:
+  docker_network:
+
+volumes:
+  wordpress_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/tigerber/data/wordpress
+      o: bind
+
+  mariadb_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/tigerber/data/mariadb
+      o: bind
